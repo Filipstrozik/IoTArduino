@@ -1,3 +1,5 @@
+#include <LiquidCrystal_I2C.h>
+LiquidCrystal_I2C lcd(0x27,16,2);
 #define LED_RED 6
 #define LED_GREEN 5
 #define LED_BLUE 3
@@ -14,14 +16,28 @@ void initRGB() {
     digitalWrite(LED_BLUE, LOW);
 }
 
+
+
+
 void initSerial() {
     Serial.begin(9600);
     while (!Serial) {}
 }
 
+void initLCD()
+{
+  lcd.init();
+  lcd.backlight();
+}
+
+
 void setup() {
     initRGB();
     initSerial();
+    initLCD();
+    lcd.setCursor(0,0);
+    lcd.print("Zadanie 2");
+
 }
 
  void loop()
@@ -31,37 +47,57 @@ void setup() {
     String command = Serial.readStringUntil('\n');
     command.trim();
     command.toLowerCase();
-    Serial.println(command.substring(0,3));
+    Serial.println(command.substring(0,3)); // czy set
 
     if (command.substring(0,3) == "set")
     {
-      	command = command.substring(4);
-      	Serial.println(command);
-      	char str[command.length()+1];
-      	command.toCharArray(str,command.length()+1);
+      command = command.substring(4);
+      //Serial.println(command);
+      char str[command.length()+1];
+      command.toCharArray(str,command.length()+1);
      	char * pch;
-       	pch = strtok (str,",");
+      pch = strtok (str,",");
   		while (pch != NULL)
   		{
-          	String com = pch;
-          	com.trim();
+          String com = pch;
+          com.trim();
           if(com.charAt(0)=='r'){
-            analogWrite(LED_RED, com.substring(2).toInt());
+            int val = com.substring(2).toInt();
+            if(val <= 255 && val >= 0){
+              analogWrite(LED_RED, val);
+              Serial.println(String("LED RED: ") + String(val));
+            } else {
+              Serial.println("Unknown LED RED value");
+            }
           } else if (com.charAt(0)=='g'){
-          	analogWrite(LED_GREEN, com.substring(2).toInt());
+            int val = com.substring(2).toInt();
+            if(val <= 255 && val >= 0){
+              analogWrite(LED_GREEN, val);
+              Serial.println(String("LED GREEN: ") + String(val));
+            } else {
+              Serial.println("Unknown led value");
+            }
           } else if (com.charAt(0)=='b'){
-            analogWrite(LED_BLUE, com.substring(2).toInt());
+            int val = com.substring(2).toInt();
+            if(val <= 255 && val >= 0){
+              analogWrite(LED_BLUE, val);
+              Serial.println(String("LED BLUE: ") + String(val));
+            } else {
+              Serial.println("Unknown led value");
+            }
+          } else {
+            Serial.println(String("Unknown led color ’") + command + "’");
+            pch = NULL;
           }
-          	Serial.println(com);
-    		pch = strtok (NULL, ",");
+          //Serial.println(com);
+    	  pch = strtok (NULL, ",");
   		}
-    	Serial.println("LED ON");
     }
     else if (command == "off")
     {
     	digitalWrite(LED_RED, LOW);
     	digitalWrite(LED_GREEN, LOW);
-      	digitalWrite(LED_BLUE, LOW);
+      digitalWrite(LED_BLUE, LOW);
     	Serial.println("LED OFF");
     }
     else

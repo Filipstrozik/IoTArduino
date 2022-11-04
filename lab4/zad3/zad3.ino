@@ -15,6 +15,11 @@ void initLCD()
 void setup()
 {
     initLCD();
+
+    lcd.setCursor(0,0);
+    lcd.print("Zadanie 3");
+    delay(3000);
+    lcd.clear();
 }
 
 void display(String adc, String real_voltage)
@@ -28,17 +33,19 @@ void display(String adc, String real_voltage)
     lcd.print(real_voltage);
 }
 
-int value_curr = -1;
+float value_curr = -1.0;
 void loop()
 {
     int value_new = analogRead(POTENT);
     int other = value_new;
-    value_new = map(value_new, 0, 1023, 0, 500);
-    if(value_curr != value_new) {
-      value_curr = value_new;
-      double temp = value_curr;
-      temp = temp/100;
-      display(String(other), String(temp));
+    float j = (float) value_new;
+    float volt = j*(5.0/1024.0);
+    // value_new = map(value_new, 0, 1023, 0, 500);
+    if(value_curr != volt) {
+      value_curr = volt;
+      // double temp = value_curr;
+      // temp = temp/100;
+      display(String(other), String(value_curr));
     }
     delay(100);
 }
