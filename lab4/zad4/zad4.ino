@@ -25,7 +25,7 @@ void setup() {
 void loop()
 {
   double pot = analogRead(POT);
-    String str = String(pot);
-    Serial.println(str);
+  String str = String(pot);
+  Serial.println(str);
     
 }
