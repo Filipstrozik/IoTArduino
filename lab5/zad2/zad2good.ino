@@ -287,17 +287,16 @@ void setup() {
 void (*(fun[4]))(int) = {blinkBuiltinLed, blinkRGB, setRgbLed, allRgbOn};
 void loop() {  
   	
-    // handles encoder - uncoment later
-    // int en1;
-    // int en2;
-    // unsigned long timestamp;
+    int en1;
+    int en2;
+    unsigned long timestamp;
 
-    // ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
-    // {
-    //     en1 = encoder1;
-    //     en2 = encoder2;
-    //     timestamp = encoderTimestamp;
-    // }
+    ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+    {
+        en1 = encoder1;
+        en2 = encoder2;
+        timestamp = encoderTimestamp;
+    }
 
     // temp part of code for tests
   	if(!isSelected)
@@ -329,46 +328,57 @@ void loop() {
             	enkoderParameter+=100;
           } else if (command == "d") {
             if(enkoderParameter > 0) 
-				enkoderParameter-=100;	
+				      enkoderParameter-=100;	
           }
       }
     }
   	
-     // if(!isSelected)
-    // {
-    //   if (en1 == LOW && timestamp > lastChangeTimestamp + DEBOUNCING_PERIOD)
-    //   {
-    //       if (en2 == HIGH)
-    //       {   
-    //           // my code
-    //           iCurrentInt = (iCurrentInt + 1)% iMenusLen;
-    //       }
-    //       else
-    //       {   
-    //           // my code
-    //           if (iCurrentInt == 0) {
-    //               iCurrentInt = iMenusLen;
-    //           }
-    //           iCurrentInt -= 1;
-    //       }
-    //       lastChangeTimestamp = timestamp;
+     if(!isSelected)
+    {
+      if (en1 == LOW && timestamp > lastChangeTimestamp + DEBOUNCE_PERIOD)
+      {
+          if (en2 == HIGH)
+          {   
+              // my code
+              iCurrentInt = (iCurrentInt + 1)% iMenusLen;
+          }
+          else
+          {   
+              // my code
+              if (iCurrentInt == 0) {
+                  iCurrentInt = iMenusLen;
+              }
+              iCurrentInt -= 1;
+          }
+          lastChangeTimestamp = timestamp;
 
-    //       // my code
-    //       if(iCurrentInt != iPrevInt) {
-    //           int iNextInt = (iCurrentInt + 1)% iMenusLen;
-    //           displayStrings(tsMenuOptions[iCurrentInt], tsMenuOptions[iNextInt]);
-    //           isSelected = false;
-    //           iPrevInt = iCurrentInt;
-    //       }
-    //   }
-    //   lastEn1 = en1;
-  // } else {
+          // my code
+          if(iCurrentInt != iPrevInt) {
+              int iNextInt = (iCurrentInt + 1)% iMenusLen;
+              displayStrings(tsMenuOptions[iCurrentInt], tsMenuOptions[iNextInt]);
+              isSelected = false;
+              iPrevInt = iCurrentInt;
+          }
+      }
+      lastEn1 = en1;
+  } else {
+     if (en1 == LOW && timestamp > lastChangeTimestamp + DEBOUNCE_PERIOD)
+      {
+          if (en2 == HIGH)
+          {   
+            if(enkoderParameter < 1000)
+            	enkoderParameter+=100;
+          }
+          else
+          {   
+            if(enkoderParameter > 0) 
+				      enkoderParameter-=100;	
+          }
+          lastChangeTimestamp = timestamp;
+      }
+      lastEn1 = en1;
   
-  
-  
-  
-  
-//	}
+	}
 
     noInterrupts();
     unsigned long localButtonTimestamp = buttonTimestamp;
