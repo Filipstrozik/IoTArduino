@@ -56,11 +56,11 @@ void setup()
 }
 
 bool areWeInComfortZone(float tempOut) {
-    return 22.0 < tempOut && tempOut < 27.0;
+    return 26.0 < tempOut && tempOut < 31.0;
 }
 
-float tempIn = null;
-float tempOut = null;
+float tempIn = 0;
+float tempOut = 0;
 float tempOutMax = tempOut;
 float tempOutMin = tempOut;
 
@@ -69,23 +69,31 @@ void updateMaxMin() {
     tempIn = tempSensors.getTempCByIndex(1);
     tempOut = tempSensors.getTempCByIndex(0);
     
-    if (tempOutMax == null || tempOut > tempOutMax) {
+    if (tempOutMax == 0 || tempOut > tempOutMax) {
         tempOutMax = tempOut;
     }
 
-    if (tempOutMin == null || tempOut < tempOutMin) {
+    if (tempOutMin == 0 || tempOut < tempOutMin) {
         tempOutMin = tempOut;
     }
 }
 
 void displayTemperatures() { // make display max and min
     char buffer[40];
-    sprintf(buffer, "Temp  IN%8s", String(tempIn, 4).c_str());
+    sprintf(buffer, "IN%4s", String(tempIn, 2).c_str());
     lcd.setCursor(0, 0);
     lcd.print(buffer);
 
-    sprintf(buffer, "Temp OUT%8s", String(tempOut, 4).c_str());
+    sprintf(buffer, "OU%4s", String(tempOut, 2).c_str());
     lcd.setCursor(0, 1);
+    lcd.print(buffer);
+
+    sprintf(buffer, "MIN%4s", String(tempOutMin, 2).c_str());
+    lcd.setCursor(8, 0);
+    lcd.print(buffer);
+
+        sprintf(buffer, "MAX%4s", String(tempOutMax, 2).c_str());
+    lcd.setCursor(8, 1);
     lcd.print(buffer);
 }
 

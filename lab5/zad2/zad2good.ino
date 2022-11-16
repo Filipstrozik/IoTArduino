@@ -1,4 +1,3 @@
-
 // Przygotuj program, który będzie pozwalał sterować świeceniem diody RGB. Program ma być 
 // wyposażony w przewijalne menu na ekranie wyświetlacza LCD (w kolejnych liniach wyświetlane 
 // są dwie pozycje z menu). Samodzielnie zaprojektuj strukturę menu programu. Nawigacja po 
@@ -6,7 +5,7 @@
 // pozycji menu odbywa się za pomocą przycisku. Minimalna funkcjonalność to zapalanie i 
 // gaszenie wybranej diody. Można też zaimplementować ustawianie jasności każdego kolory 
 // diody enkoderem. Warto też program oprzeć na przerwaniach zgłaszanych przy zmianie stanu enkodera.
-
+//
 
 #include <util/atomic.h>
 #include <LiquidCrystal_I2C.h>
@@ -27,15 +26,15 @@ int led[] = {LED_RED, LED_GREEN, LED_BLUE};
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 //________________________________________________________________________________________________
-String tsMenuOptions[] = {"Wbudowana", "RGB", "Set RGB", "Set Diode"};
-int iMenusLen = 4;
+String tsMenuOptions[] = {"Wbudowana", "RGB", "Set RGB", "LED PAINT", "LED SWITCH"};
+int iMenusLen = 5;
 
 int iCurrentInt = 0;
 int iPrevInt = -1;
-
+volatile unsigned long buttonTimestampG = 0UL;
 volatile unsigned long buttonTimestamp = 0UL;
 unsigned long previousButtonTimestamp = 0UL;
-
+unsigned long previousButtonTimestampG = 0UL;
 int enkoderParameter = 1000;
 int lastEn1 = LOW;
 unsigned long lastChangeTimestamp = 0UL;
@@ -51,8 +50,8 @@ static int lastIntensivity = -1;
 
 void displayEnkoderParameter(String sVal) {
     lcd.setCursor(10,1);
-    lcd.print("_____");
-    lcd.setCursor(10,1);
+    lcd.print("v=____");
+    lcd.setCursor(12,1);
     lcd.print(sVal);
 }
 
@@ -86,7 +85,7 @@ void showExcerciseNumber(String sVal){
 //________________________________________________________________________________________________
 
 void setRgbLed(int intensivity) {
-    //const unsigned long BlinkChangePeriod = 1000UL;
+
   	static int led_index = 0;
     int mappedIntesivity = map(intensivity, 0, 1000, 0, 255);
     displayEnkoderParameter(String(mappedIntesivity));
@@ -104,7 +103,7 @@ void setRgbLed(int intensivity) {
 
 
 void blinkBuiltinLed(int time) {
-    //const unsigned long BlinkChangePeriod = 1000UL;
+
   	const unsigned long BlinkChangePeriod = time;
     displayEnkoderParameter(String(BlinkChangePeriod));
     static int ledState = LOW;
@@ -184,11 +183,22 @@ void allRgbOn(int intensivity) {
     }
 }
 
-void allOff() {
-    for(int i=0; i<3; i++) {
-        digitalWrite(led[i], 0);
-    }
-    digitalWrite(LED_BUILTIN, LOW);
+void allOff(int noneed) {
+  static int ledState = LOW;
+  	if (isGreenBuPressed()) {
+      if(ledState == LOW){
+        for(int i=0; i<3; i++) {
+        digitalWrite(led[i], HIGH);
+        }
+        ledState = HIGH;
+      }
+      else {
+        for(int i=0; i<3; i++) {
+        digitalWrite(led[i], LOW);
+        }
+        ledState = LOW;
+      }
+    } 
 }
 
 //________________________________________________________________________________________________
@@ -266,7 +276,7 @@ ISR(PCINT1_vect) {
 }
 
 ISR(PCINT2_vect) {
-    buttonTimestamp = millis();
+    buttonTimestampG = millis();
 }
 
 void setup() {
@@ -288,60 +298,24 @@ void setup() {
     initRGB();
     displayStrings(tsMenuOptions[iCurrentInt], tsMenuOptions[iCurrentInt + 1]);
     attachInterrupt(digitalPinToInterrupt(RED_BUTTON), interruptAction, FALLING);
-    // attachInterrupt(digitalPinToInterrupt(GREEN_BUTTON), interruptAction, FALLING); to nie tak
 }
 
-void (*(fun[4]))(int) = {blinkBuiltinLed, blinkRGB, setRgbLed, allRgbOn};
+void (*(fun[5]))(int) = {blinkBuiltinLed, blinkRGB, setRgbLed, allRgbOn, allOff};
 void loop() {  
     int en1;
     int en2;
     unsigned long timestamp;
-    unsigned long localButtonTimestamp;
+    unsigned long localButtonTimestampG;
 
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
     {
         en1 = encoder1;
         en2 = encoder2;
         timestamp = encoderTimestamp;
-        localButtonTimestamp = buttonTimestamp;
+        localButtonTimestampG = buttonTimestampG;
     }
 
-    // temp part of code for tests
-  	if(!isSelected)
-    {
-      if (Serial.available()) {
-          String command = Serial.readStringUntil('\n');
-          if(command == "d") {
-              iCurrentInt = (iCurrentInt + 1)% iMenusLen;
-
-          } else if (command == "u") {
-              if (iCurrentInt == 0) {
-                  iCurrentInt = iMenusLen;
-              }
-              iCurrentInt -= 1;
-          }
-          if(iCurrentInt != iPrevInt) {
-                  int iNextInt = (iCurrentInt + 1)% iMenusLen;
-                  displayStrings(tsMenuOptions[iCurrentInt], tsMenuOptions[iNextInt]);
-                  //isSelected = false;
-                  iPrevInt = iCurrentInt;
-          }
-
-      }
-    } else {
-      if (Serial.available()) {
-          String command = Serial.readStringUntil('\n');
-          if(command == "u") {
-            if(enkoderParameter < 1000)
-            	enkoderParameter+=100;
-          } else if (command == "d") {
-            if(enkoderParameter > 0) 
-				      enkoderParameter-=100;	
-          }
-      }
-    }
-  	
-     if(!isSelected)
+    if(!isSelected)
     {
       if (en1 == LOW && timestamp > lastChangeTimestamp + DEBOUNCE_PERIOD)
       {
@@ -386,30 +360,19 @@ void loop() {
   
 	}
 
-    // noInterrupts();
-    // unsigned long localButtonTimestamp = buttonTimestamp;
-    // interrupts();
+    noInterrupts();
+    unsigned long localButtonTimestamp = buttonTimestamp;
+    interrupts();
 
-// drganie
-	if (isGreenBuPressed()) {
-            isSelected = true;
-            displayString(tsMenuOptions[iCurrentInt]);
-          	
-    } 
-	if (isRedBuPressed()) {
-            isSelected = false;
-            int iNextInt = (iCurrentInt + 1)% iMenusLen;
-            displayStrings(tsMenuOptions[iCurrentInt], tsMenuOptions[iNextInt]);
-    } 
 
-    if(localButtonTimestamp != previousButtonTimestamp && millis() > localButtonTimestamp + DEBOUNCE_PERIOD)
+    if(localButtonTimestampG != previousButtonTimestampG && millis() > localButtonTimestampG + DEBOUNCE_PERIOD)
     {
         if (digitalRead(GREEN_BUTTON) == LOW) {
                 isSelected = true;
                 displayString(tsMenuOptions[iCurrentInt]);
                 
         } 
-        previousButtonTimestamp = localButtonTimestamp;
+        previousButtonTimestampG = localButtonTimestampG;
     }
 
     if(localButtonTimestamp != previousButtonTimestamp && millis() > localButtonTimestamp + DEBOUNCE_PERIOD)
@@ -422,17 +385,9 @@ void loop() {
         previousButtonTimestamp = localButtonTimestamp;
     }
 
-  	
-	String str = String(digitalRead(RED_BUTTON)) + " - " 
-      +String( digitalRead(GREEN_BUTTON))+" - "+ String(isSelected)
-      + " - " + String(enkoderParameter);
-    Serial.println(str);
 
     if(isSelected) {
         fun[iCurrentInt](enkoderParameter);
-    }
-    else {
-        allOff();
     }
 }
 
