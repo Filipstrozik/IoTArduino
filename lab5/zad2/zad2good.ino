@@ -82,7 +82,7 @@ void showExcerciseNumber(String sVal){
     delay(1500);
 }
 
-// blinking methods
+// LED 
 //________________________________________________________________________________________________
 
 void setRgbLed(int intensivity) {
@@ -265,11 +265,13 @@ ISR(PCINT1_vect) {
     encoderTimestamp = millis();
 }
 
+ISR(PCINT2_vect) {
+    buttonTimestamp = millis();
+}
+
 void setup() {
     Serial.begin(9600);
     while (!Serial) {}
-    pinMode(LED_RED, OUTPUT);
-    pinMode(LED_BLUE, OUTPUT);
     pinMode(ENCODER1, INPUT_PULLUP);
     pinMode(ENCODER2, INPUT_PULLUP);
     lcd.init();
@@ -278,24 +280,30 @@ void setup() {
 
     PCICR |= (1 << PCIE1);
     PCMSK1 |= (1 << PCINT10);
+
+    PCICR |= (1 << PCIE2);
+    PCMSK2 |= (1 << PCINT20);
+
     initButtons();
     initRGB();
     displayStrings(tsMenuOptions[iCurrentInt], tsMenuOptions[iCurrentInt + 1]);
     attachInterrupt(digitalPinToInterrupt(RED_BUTTON), interruptAction, FALLING);
+    // attachInterrupt(digitalPinToInterrupt(GREEN_BUTTON), interruptAction, FALLING); to nie tak
 }
 
 void (*(fun[4]))(int) = {blinkBuiltinLed, blinkRGB, setRgbLed, allRgbOn};
 void loop() {  
-  	
     int en1;
     int en2;
     unsigned long timestamp;
+    unsigned long localButtonTimestamp;
 
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
     {
         en1 = encoder1;
         en2 = encoder2;
         timestamp = encoderTimestamp;
+        localButtonTimestamp = buttonTimestamp;
     }
 
     // temp part of code for tests
@@ -339,12 +347,11 @@ void loop() {
       {
           if (en2 == HIGH)
           {   
-              // my code
               iCurrentInt = (iCurrentInt + 1)% iMenusLen;
           }
           else
           {   
-              // my code
+
               if (iCurrentInt == 0) {
                   iCurrentInt = iMenusLen;
               }
@@ -352,7 +359,6 @@ void loop() {
           }
           lastChangeTimestamp = timestamp;
 
-          // my code
           if(iCurrentInt != iPrevInt) {
               int iNextInt = (iCurrentInt + 1)% iMenusLen;
               displayStrings(tsMenuOptions[iCurrentInt], tsMenuOptions[iNextInt]);
@@ -380,11 +386,11 @@ void loop() {
   
 	}
 
-    noInterrupts();
-    unsigned long localButtonTimestamp = buttonTimestamp;
-    interrupts();
+    // noInterrupts();
+    // unsigned long localButtonTimestamp = buttonTimestamp;
+    // interrupts();
 
-
+// drganie
 	if (isGreenBuPressed()) {
             isSelected = true;
             displayString(tsMenuOptions[iCurrentInt]);
@@ -396,8 +402,26 @@ void loop() {
             displayStrings(tsMenuOptions[iCurrentInt], tsMenuOptions[iNextInt]);
     } 
 
-  
-  
+    if(localButtonTimestamp != previousButtonTimestamp && millis() > localButtonTimestamp + DEBOUNCE_PERIOD)
+    {
+        if (digitalRead(GREEN_BUTTON) == LOW) {
+                isSelected = true;
+                displayString(tsMenuOptions[iCurrentInt]);
+                
+        } 
+        previousButtonTimestamp = localButtonTimestamp;
+    }
+
+    if(localButtonTimestamp != previousButtonTimestamp && millis() > localButtonTimestamp + DEBOUNCE_PERIOD)
+    {
+        if (digitalRead(RED_BUTTON) == LOW) {
+                isSelected = false;
+                int iNextInt = (iCurrentInt + 1)% iMenusLen;
+                displayStrings(tsMenuOptions[iCurrentInt], tsMenuOptions[iNextInt]);
+        } 
+        previousButtonTimestamp = localButtonTimestamp;
+    }
+
   	
 	String str = String(digitalRead(RED_BUTTON)) + " - " 
       +String( digitalRead(GREEN_BUTTON))+" - "+ String(isSelected)
@@ -411,3 +435,10 @@ void loop() {
         allOff();
     }
 }
+
+//gdy enkoder przekręcamy w lewo 
+//to w momencie (przerwania) zmiany stanu wejscia A na wysoki,
+//zawsze stan na wejsciu B jest również wysoki.
+//gdy enkoder przekręcamy w prawo
+//to w momencie (przerwania) zmiany stanu wejscia A na wysoki,
+//zawsze stan na wejsciu B jest niski.
