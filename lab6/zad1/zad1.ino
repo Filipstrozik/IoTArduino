@@ -21,6 +21,12 @@ DallasTemperature tempSensors(&oneWire);
 #define LED_RED 6
 #define LED_GREEN 5
 #define LED_BLUE 3
+
+float tempIn = 0;
+float tempOut = 0;
+float tempOutMax = tempOut;
+float tempOutMin = tempOut;
+
 int led[] = {LED_RED, LED_GREEN, LED_BLUE};
 
 void initRGB() {
@@ -32,9 +38,6 @@ void initRGB() {
 
     pinMode(LED_BLUE, OUTPUT);
     digitalWrite(LED_BLUE, LOW);
-
-    pinMode(LED_BUILTIN, OUTPUT);
-    digitalWrite(LED_BUILTIN, LOW);
 }
 
 void initLCD()
@@ -50,21 +53,22 @@ void setup()
     initRGB();
   	initLCD();
     tempSensors.begin();
-	
-
     lcd.clear();
 }
 
-bool areWeInComfortZone(float tempOut) {
-    return 26.0 < tempOut && tempOut < 31.0;
+bool isComfort(float tempOut) {
+    return 28.0 < tempOut && tempOut < 31.0;
 }
 
-float tempIn = 0;
-float tempOut = 0;
-float tempOutMax = tempOut;
-float tempOutMin = tempOut;
+bool areWeFreezing(float tempOut) {
+    return 28.0 >= tempOut;
+}
 
-void updateMaxMin() {
+bool areWeSweating(float tempOut) {
+    return 31.0 <= tempOut;
+}
+
+void setTempMinMax() {
     tempSensors.requestTemperatures();
     tempIn = tempSensors.getTempCByIndex(1);
     tempOut = tempSensors.getTempCByIndex(0);
@@ -78,7 +82,7 @@ void updateMaxMin() {
     }
 }
 
-void displayTemperatures() { // make display max and min
+void displayTemp() { 
     char buffer[40];
     sprintf(buffer, "IN%4s", String(tempIn, 2).c_str());
     lcd.setCursor(0, 0);
@@ -99,13 +103,20 @@ void displayTemperatures() { // make display max and min
 
 void loop()
 {
-    updateMaxMin();
-    displayTemperatures();
+    setTempMinMax();
+    displayTemp();
     
-    if(areWeInComfortZone(tempOut)) {
+    if(isComfort(tempOut)) {
         digitalWrite(LED_GREEN, HIGH);
-    }
-    else {
+        digitalWrite(LED_RED, LOW);
+        digitalWrite(LED_BLUE, LOW);
+    } else if(areWeFreezing(tempOut)){
         digitalWrite(LED_GREEN, LOW);
+        digitalWrite(LED_RED, LOW);
+        digitalWrite(LED_BLUE, HIGH);
+    } else if(areWeSweating(tempOut)){
+        digitalWrite(LED_GREEN, LOW);
+        digitalWrite(LED_RED, HIGH);
+        digitalWrite(LED_BLUE, LOW);
     }
 }

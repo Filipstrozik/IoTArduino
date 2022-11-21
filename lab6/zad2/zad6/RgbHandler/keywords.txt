@@ -1,0 +1,26 @@
+#######################################
+# Syntax Coloring Map For RgbHandler
+#######################################
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+Color	KEYWORD1
+RgbDiode	KEYWORD1
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+initialize	KEYWORD2
+writeRed	KEYWORD2
+writeGreen	KEYWORD2
+writeBlue	KEYWORD2
+writeRgb	KEYWORD2
+writeColor	KEYWORD2
+setColor	KEYWORD2
+red	KEYWORD2
+green	KEYWORD2
+blue	KEYWORD2
+setRgb	KEYWORD2
+setColor	KEYWORD2
+#######################################
+# Constants (LITERAL1)
+#######################################

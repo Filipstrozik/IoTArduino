@@ -1,0 +1,23 @@
+{
+  "name": "RgbHandler",
+  "keywords": "rgb, blink, color",
+  "description": "Arduino Library for IoT Laboratory",
+  "repository":
+  {
+    "type": "git",
+    "url": "https://example.com/RgbHandler.git"
+  },
+  "authors": 
+  [
+    {
+      "name": "Filip Strózik",
+      "email": "john.smith@example.com",
+      "url": "http://john.smith.example.com",
+      "maintainer": true
+    }
+  ],
+  "version": "1.0.0",
+  "homepage": "hhttps://example.com/RgbHandler",
+  "frameworks": "arduino",
+  "platforms": "*"
+}
