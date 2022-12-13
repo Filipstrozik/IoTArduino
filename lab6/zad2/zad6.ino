@@ -1,6 +1,4 @@
 #include <RgbHandler.h>
-
-#include <RgbHandler.h>
 // Zadanie 2: Implementacja własnej biblioteki ze sterownikiem wybranego urządzenia
 
 // Przygotuj własną bibliotekę, która będzie służyła do sterowania diodą RGB.

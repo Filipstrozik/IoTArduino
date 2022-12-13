@@ -1,6 +1,5 @@
 
 // Zadanie 1: Program wykorzystujący czujniki DS18B20
-
 // Przygotuj program, który uczyni zestaw laboratoryjny małą „stacją pogodową”. 
 // Na wyświetlaczu LCD ma prezentować temperaturę wewnętrzną (czujnik wewnątrz zestawu) i 
 // zewnętrzną (sonda na przewodzie). Ponadto program powinien pamiętać wartość maksymalną i 
@@ -57,16 +56,18 @@ void setup()
 }
 
 bool isComfort(float tempOut) {
-    return 28.0 < tempOut && tempOut < 31.0;
+    return 26.0 < tempOut && tempOut < 27.0;
 }
 
 bool areWeFreezing(float tempOut) {
-    return 28.0 >= tempOut;
+    return 26.0 >= tempOut;
 }
 
 bool areWeSweating(float tempOut) {
-    return 31.0 <= tempOut;
+    return 27.0 <= tempOut;
 }
+
+
 
 void setTempMinMax() {
     tempSensors.requestTemperatures();
@@ -84,19 +85,19 @@ void setTempMinMax() {
 
 void displayTemp() { 
     char buffer[40];
-    sprintf(buffer, "IN%4s", String(tempIn, 2).c_str());
+    sprintf(buffer, "I%s", String(tempIn, 2).c_str());
     lcd.setCursor(0, 0);
     lcd.print(buffer);
 
-    sprintf(buffer, "OU%4s", String(tempOut, 2).c_str());
+    sprintf(buffer, "O%s", String(tempOut, 2).c_str());
     lcd.setCursor(0, 1);
     lcd.print(buffer);
 
-    sprintf(buffer, "MIN%4s", String(tempOutMin, 2).c_str());
+    sprintf(buffer, "^%4s", String(tempOutMin, 2).c_str());
     lcd.setCursor(8, 0);
     lcd.print(buffer);
 
-        sprintf(buffer, "MAX%4s", String(tempOutMax, 2).c_str());
+        sprintf(buffer, "V%4s", String(tempOutMax, 2).c_str());
     lcd.setCursor(8, 1);
     lcd.print(buffer);
 }
@@ -107,13 +108,13 @@ void loop()
     displayTemp();
     
     if(isComfort(tempOut)) {
-        digitalWrite(LED_GREEN, HIGH);
-        digitalWrite(LED_RED, LOW);
-        digitalWrite(LED_BLUE, LOW);
-    } else if(areWeFreezing(tempOut)){
         digitalWrite(LED_GREEN, LOW);
         digitalWrite(LED_RED, LOW);
         digitalWrite(LED_BLUE, HIGH);
+    } else if(areWeFreezing(tempOut)){
+        digitalWrite(LED_GREEN, HIGH);
+        digitalWrite(LED_RED, LOW);
+        digitalWrite(LED_BLUE, LOW);
     } else if(areWeSweating(tempOut)){
         digitalWrite(LED_GREEN, LOW);
         digitalWrite(LED_RED, HIGH);

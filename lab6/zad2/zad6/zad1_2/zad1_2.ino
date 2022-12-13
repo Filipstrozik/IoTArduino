@@ -1,4 +1,6 @@
+#include <RgbHandler.h>
 #include <LiquidCrystal_I2C.h>
+
 LiquidCrystal_I2C lcd(0x27,16,2);
 
 #define LED_RED 6
@@ -12,7 +14,7 @@ LiquidCrystal_I2C lcd(0x27,16,2);
 RgbDiode myDiode(6,5,3); // zastosowanie klasy RgbDiode ustawienie wyjsc
 Color colors[] = {Color("RED"), Color("GREEN"), Color("BLUE"), Color("YELLOW"), Color("CYAN"), Color("MAGENTA"), Color("WHITE"), Color("BLACK"), Color(255, 153, 0), Color(0, 51, 0)};
 int colors_len = 10;
-int color_index = -1;
+int color_index = 0;
 int led[] = {LED_RED, LED_GREEN, LED_BLUE};
 
 // void initRGB()
@@ -168,7 +170,7 @@ void loop() {
         myDiode.setColor(colors[color_index]);
     }
 
-    if (wasRedPressedAndReleased()) 
+    if (isRedBuPressed()) 
     {
       if(color_index == 9){
         if(isChanged){
@@ -178,6 +180,7 @@ void loop() {
         } else {
           colors[color_index].setColor("USER");
           myDiode.setColor(colors[color_index]);
+          //myDiode.writeRgb(155,50,0);
           isChanged = true;
         }
       } else {
