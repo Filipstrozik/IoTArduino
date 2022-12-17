@@ -9,6 +9,7 @@ import neopixel
 import w1thermsensor
 from config import *
 
+
 # enumeracja kolorów dla każdego trybu
 class Color:
     temperature_ds_color = (255, 10, 144)
@@ -16,6 +17,7 @@ class Color:
     pressure_color = (255, 0, 255)
     altitude_color = (128, 128, 0)
     humidity_color = (0, 255, 120)
+
 
 # sterownik paska led.
 class WeatherDiods:
@@ -29,7 +31,6 @@ class WeatherDiods:
     #     time.sleep(1)
     #     pass
 
-
     # metoda wyświetlająca pomiar
     def display(self, val, start, end, color):
         max_one_led = (end - start) / 8
@@ -37,16 +38,18 @@ class WeatherDiods:
 
         # w petli odświezamy ile ledow ma sie zapalic
         for led_id in range(8):
-            #bycmoze powinno być <=
-            if led_id < leds_on_number: 
+            # bycmoze powinno być <=
+            if led_id < leds_on_number:
                 self.pixels[led_id] = color
             else:
                 self.pixels[led_id] = (0, 0, 0)
         self.pixels.show()
+        print(f'Display: {leds_on_number}  leds of 8, start: {start} end: {end} color: {color}')
 
     def display_menu(self, mode_index):
-        self.pixels.fill((0,0,0)) #ciekawe czy dobrze krotka?
+        self.pixels.fill((0, 0, 0))  # ciekawe czy dobrze krotka?
         self.pixels.show()
+        print(f'Menu: {mode_index}(mode) leds of {4}')
         if mode_index == 0:
             self.pixels[mode_index] = Color.temperature_ds_color
         elif mode_index == 1:
@@ -58,6 +61,7 @@ class WeatherDiods:
         elif mode_index == 4:
             self.pixels[mode_index] = Color.altitude_color
         self.pixels.show()
+
 
 # kontroller do stacji pogodowych
 class Station:
@@ -74,9 +78,6 @@ class Station:
         self.bme280.overscan_pressure = adafruit_bme280.OVERSCAN_X16
         self.bme280.overscan_humidity = adafruit_bme280.OVERSCAN_X1
         self.bme280.overscan_temperature = adafruit_bme280.OVERSCAN_X2
-
-
-
 
 
 class MainController:
@@ -112,7 +113,7 @@ class MainController:
         def run(self):
             self.current_temp_ds = self.weather_station.ds18b20.get_temperature()
             self.leds.display(self.current_temp_ds, self.min_temp_ds, self.max_temp_ds, Color.temperature_bme)
-            print(f'Temperature: {self.current_temp_ds:0.1f} '+chr(176)+'C')
+            print(f'Temperature: {self.current_temp_ds:0.1f} ' + chr(176) + 'C')
 
     class TemperatureBME(Mode):
         def __init__(self, leds, weather_station) -> None:
@@ -124,7 +125,7 @@ class MainController:
         def run(self):
             self.current_temp = self.weather_station.bme280.temperature
             self.leds.display(self.current_temp, self.min_temp, self.max_temp, Color.temperature_bme)
-            print(f'Temperature: {self.current_temp:0.1f} '+chr(176)+'C')
+            print(f'Temperature: {self.current_temp:0.1f} ' + chr(176) + 'C')
 
     class Pressure(Mode):
         def __init__(self, leds, weather_station) -> None:
