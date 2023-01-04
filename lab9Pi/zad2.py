@@ -21,7 +21,7 @@ class Color:
 
 # sterownik paska led.
 class WeatherDiods:
-    def __init__(self) -> None:
+    def __init__(self):
         self.pixels = neopixel.NeoPixel(board.D18, 8, brightness=1.0 / 32, auto_write=False)
 
     # def humidity(self):
