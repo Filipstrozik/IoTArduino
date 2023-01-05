@@ -12,6 +12,9 @@ from config import *
 ARIAL = ImageFont.truetype('fonts/arial.ttf')
 
 
+# ImageFont.truetype(’./lib/oled/Font.ttf’, 20)
+
+
 class Oled:
     def __init__(self, background_file):
         self.display = SSD1331.SSD1331()
@@ -35,11 +38,15 @@ class Oled:
     def get_height(self):
         return self.display.heigth
 
-    def print_text(self, coordinates, text, color=None, font=ARIAL):
+    def print_text(self, coordinates, text, color=None, font=ARIAL):  # color="WHITE"
         self.printer.text(coordinates, text, fill=color, font=font)
 
     def clear_xy(self, coordinates):
         self.printer.rectangle(coordinates, fill=(255, 255, 255))
+
+    def place_image(self, path, x, y):
+        image = Image.open(path)
+        self.display.ShowImage(image, x, y)
 
 
 class Station:
@@ -78,7 +85,6 @@ class MainController:
     PIXEL_RIGHT = 30
     MAX_RIGHT = 96
 
-    # TODO add alone pictograms on left of every measure
     def __init__(self):
         self.weather_station = Station()
         self.oled_display = Oled('images/background_dark.png')
@@ -88,25 +94,42 @@ class MainController:
                                 (self.PIXEL_RIGHT, 3),
                                 ((self.PIXEL_RIGHT, 0), (self.MAX_RIGHT, 20)),
                                 self.TEMPERATURE_DELTA,
-                                'Temp:', 'C'),
+                                'Temp:',
+                                'C',
+                                path='images/thermometer.jpg',
+                                imgx=0,
+                                imgy=0),
             self.MeasureHandler(self.oled_display,
                                 self.weather_station.humidity,
                                 (self.PIXEL_RIGHT, 19),
                                 ((self.PIXEL_RIGHT, 15), (self.MAX_RIGHT, 35)),
                                 self.HUMIDITY_DELTA,
-                                'Hum:', '%'),
+                                'Hum:',
+                                '%',
+                                path='images/humidity.jpg',
+                                imgx=0,
+                                imgy=16),
             self.MeasureHandler(self.oled_display,
                                 self.weather_station.altitude,
                                 (self.PIXEL_RIGHT, 35),
                                 ((self.PIXEL_RIGHT, 30), (self.MAX_RIGHT, 50)),
                                 self.ALTITUDE_DELTA,
-                                'Alt:', 'm'),
+                                'Alt:',
+                                'm',
+                                path='images/altitude.jpg',
+                                imgx=0,
+                                imgy=32
+                                ),
             self.MeasureHandler(self.oled_display,
                                 self.weather_station.pressure(),
                                 (self.PIXEL_RIGHT, 50),
                                 ((self.PIXEL_RIGHT, 45), (self.MAX_RIGHT, 65)),
                                 self.PRESSURE_DELTA,
-                                'Press:', 'hPa')
+                                'Press:',
+                                'hPa',
+                                path='images/pressure.jpg',
+                                imgx=0,
+                                imgy=48)
         ]
 
     def initial_print_measures(self):
@@ -120,7 +143,7 @@ class MainController:
         self.oled_display.show()
 
     class MeasureHandler:
-        def __init__(self, oled, function, pixel_tuple, clear_tuple, value_delta, extra_text, unit):
+        def __init__(self, oled, function, pixel_tuple, clear_tuple, value_delta, extra_text, unit, path, imgx, imgy):
             self.oled = oled
             self.current_value = function()
             self.function = function
@@ -129,6 +152,9 @@ class MainController:
             self.value_delta = value_delta
             self.extra_text = extra_text
             self.unit = unit
+            self.path = path
+            self.image_x = imgx
+            self.image_y = imgy
 
         def difference_print(self):
             new_value = self.function()
@@ -139,7 +165,8 @@ class MainController:
         def print(self):
             self.oled.clear_xy(self.clear_tuple)
             text_to_print = f'{self.extra_text} {round(self.current_value, 1)} {self.unit}'
-            self.oled.print_text(self.print_tuple, text_to_print)  # may i need 4 args
+            self.oled.print_text(self.print_tuple, text_to_print)
+            self.oled.place_image(self.path, self.image_x, self.image_y)
 
 
 if __name__ == '__main__':

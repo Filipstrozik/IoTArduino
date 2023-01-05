@@ -12,6 +12,10 @@ import adafruit_bme280.advanced as adafruit_bme280
 from mfrc522 import MFRC522
 
 
+def formated_print(mytime):
+    return f'{mytime.hour}:{mytime.minute}:{mytime.second},{mytime.microsecond}'
+
+
 class RFID:
     def __init__(self):
         self.MIFAREReader = MFRC522()
@@ -34,11 +38,8 @@ class RFID:
             self.is_being_read = False
         return False
 
-    def formated_print(self, time):
-        return f'{time.hour}:{time.minute}:{time.second},{time.microsecond}'
-
     def print_read_rfid(self):
-        print(f'card readed: {self.is_being_read} Last read time: {self.formated_print(self.initial_time)}')
+        print(f'card readed: {self.is_being_read} Last read time: {formated_print(self.initial_time)}')
 
 
 # clas from lab9
