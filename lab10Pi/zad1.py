@@ -46,7 +46,10 @@ class Oled:
 
     def place_image(self, path, x, y):
         image = Image.open(path)
-        self.display.ShowImage(image, x, y)
+        image = image.resize((16, 16))
+        self.background.paste(image, (x, y))
+        # probably below wont work but try it
+        self.display.ShowImage(self.background, 0, 0)
 
 
 class Station:
