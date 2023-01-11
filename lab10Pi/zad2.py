@@ -3,13 +3,14 @@
 
 import RPi.GPIO as GPIO
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 import neopixel
 import board
 import busio
 import w1thermsensor
 import adafruit_bme280.advanced as adafruit_bme280
 from mfrc522 import MFRC522
+from config import *
 
 
 def formated_print(mytime):
@@ -19,7 +20,7 @@ def formated_print(mytime):
 class RFID:
     def __init__(self):
         self.MIFAREReader = MFRC522()
-        self.initial_time = None
+        self.initial_time = datetime.now()
         self.is_being_read = False
 
     def read(self) -> bool:
@@ -71,7 +72,7 @@ class MainController:
         self.rfid = RFID()
         self.led = LedController()
         self.buzzer = None
-        self.time_period = 1
+        self.time_period = 1.0
 
     def run(self):
         if self.rfid.read():
@@ -79,7 +80,7 @@ class MainController:
             GPIO.output(buzzerPin, False)
             self.led.animate_read()
 
-        if self.rfid.initial_time + self.time_period < datetime.now():
+        if self.rfid.initial_time + timedelta(seconds=1) < datetime.now():
             GPIO.output(buzzerPin, True)
 
         if not self.rfid.is_being_read:
