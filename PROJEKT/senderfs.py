@@ -7,6 +7,7 @@ from Handlers import *
 # The terminal ID - can be any string.
 terminal_id = "T0"
 # The broker name or IP address.
+# broker = "localhost"
 broker = "localhost"
 # broker = "127.0.0.1"
 # broker = "10.0.0.1"
@@ -14,8 +15,9 @@ broker = "localhost"
 # The MQTT client.
 client = mqtt.Client()
 
+
 # Thw main window with buttons to simulate the RFID card usage.
-window = tkinter.Tk()
+# window = tkinter.Tk()
 
 
 def call_worker(worker_name):
@@ -75,18 +77,26 @@ def run_sender():
     disconnect_from_broker()
 
 
-def publish(self, card_id, timestamp):
-    self.client.publish('id/card', card_id + '@' + timestamp)
+def publish(card_id, timestamp):
+    client.publish('id/card', str(card_id) + '@' + timestamp)
 
 
 if __name__ == "__main__":
-    rfid = RFID()
-    run_sender()
-    while True:
-        log_time = datetime.now()
-        read = rfid.read()
-        print(f'{log_time} - read')
-        if read is True:
-            publish(read, formated_print(log_time))
+    # rfid = RFID()
+    # run_sender()
+    connect_to_broker()
 
+    while True:
+        inp = ''
+        log_time = datetime.now()
+        # read = rfid.read()
+        # if read is not None:
+        #
+        #     publish(read, formated_print(log_time))
+        while inp != "s":
+            inp = input()
+        print(f'{log_time} - read')
+        publish(12345, formated_print(log_time))
         time.sleep(0.1)
+
+    disconnect_from_broker()

@@ -8,7 +8,7 @@ import adafruit_bme280.advanced as adafruit_bme280
 import lib.oled.SSD1331 as SSD1331
 from PIL import Image, ImageDraw, ImageFont
 from config import *
-
+import os
 ARIAL = ImageFont.truetype('fonts/arial.ttf')
 
 
@@ -20,11 +20,13 @@ class Oled:
         self.display = SSD1331.SSD1331()
         self.display.Init()
         self.display.clear()
-        self.background = Image.open(background_file)
+        # self.background = Image.open(background_file)
+        self.background = Image.new("RGB", (self.display.width, self.display.height), "GREY")
+        # self.background = self.background.resize((self.display.width,self.display.height))
         self.printer = ImageDraw.Draw(self.background)
 
     def show(self):
-        self.display.ShowImage(self.background)
+        self.display.ShowImage(self.background, 0, 0)
 
     def clear(self):
         self.display.clear()
@@ -36,20 +38,20 @@ class Oled:
         return self.display.width
 
     def get_height(self):
-        return self.display.heigth
+        return self.display.height
 
-    def print_text(self, coordinates, text, color=None, font=ARIAL):  # color="WHITE"
+    def print_text(self, coordinates, text, color="BLACK", font=ARIAL):  # color="WHITE"
         self.printer.text(coordinates, text, fill=color, font=font)
 
     def clear_xy(self, coordinates):
-        self.printer.rectangle(coordinates, fill=(255, 255, 255))
+        self.printer.rectangle(coordinates, fill=(128, 128, 128))
 
     def place_image(self, path, x, y):
         image = Image.open(path)
-        image = image.resize((16, 16))
+        # image = image.resize((16, 16))
         self.background.paste(image, (x, y))
         # probably below wont work but try it
-        self.display.ShowImage(self.background, 0, 0)
+        # self.display.ShowImage(self.background, 0, 0)
 
 
 class Station:
@@ -84,13 +86,13 @@ class MainController:
     TEMPERATURE_DELTA = 0.1
     HUMIDITY_DELTA = 0.1
     ALTITUDE_DELTA = 0.1
-    PRESSURE_DELTA = 1
-    PIXEL_RIGHT = 30
+    PRESSURE_DELTA = 0.1
+    PIXEL_RIGHT = 16
     MAX_RIGHT = 96
 
     def __init__(self):
         self.weather_station = Station()
-        self.oled_display = Oled('images/background_dark.png')
+        self.oled_display = Oled('images/background_dark.jpg')
         self.measures = [
             self.MeasureHandler(self.oled_display,
                                 self.weather_station.temperature,
@@ -124,7 +126,7 @@ class MainController:
                                 imgy=32
                                 ),
             self.MeasureHandler(self.oled_display,
-                                self.weather_station.pressure(),
+                                self.weather_station.pressure,
                                 (self.PIXEL_RIGHT, 50),
                                 ((self.PIXEL_RIGHT, 45), (self.MAX_RIGHT, 65)),
                                 self.PRESSURE_DELTA,
@@ -144,6 +146,7 @@ class MainController:
         for measure in self.measures:
             measure.difference_print()
         self.oled_display.show()
+        time.sleep(2)
 
     class MeasureHandler:
         def __init__(self, oled, function, pixel_tuple, clear_tuple, value_delta, extra_text, unit, path, imgx, imgy):
@@ -162,10 +165,12 @@ class MainController:
         def difference_print(self):
             new_value = self.function()
             if abs(self.current_value - new_value) > self.value_delta:
+                print('conditional print')
                 self.current_value = new_value
                 self.print()
 
         def print(self):
+            print('print')
             self.oled.clear_xy(self.clear_tuple)
             text_to_print = f'{self.extra_text} {round(self.current_value, 1)} {self.unit}'
             self.oled.print_text(self.print_tuple, text_to_print)
@@ -173,6 +178,7 @@ class MainController:
 
 
 if __name__ == '__main__':
+    os.system('sudo systemctl stop ip-oled.service')
     controller: MainController = MainController()
     controller.initial_print_measures()
     while True:

@@ -14,7 +14,7 @@ broker = "localhost"
 client = mqtt.Client()
 
 # Thw main window.
-window = tkinter.Tk()
+# window = tkinter.Tk()
 
 def process_message(client, userdata, message):
     # Decode message.
@@ -23,13 +23,12 @@ def process_message(client, userdata, message):
 
     # Print message to console.
     if card_id != "Client connected" and card_id != "Client disconnected":
-        print(time.ctime() + ", " +
-              card_id + " used the RFID card.")
+        print(log_time + ", " + card_id + " used the RFID card.")
 
         # Save to sqlite database.
         connention = sqlite3.connect("logs.db")
         cursor = connention.cursor()
-        cursor.execute("INSERT INTO logs VALUES (?,?)",
+        cursor.execute("INSERT INTO logs (card_id, time) VALUES (?, ?)",
                        (card_id, log_time))
         connention.commit()
         connention.close()
@@ -91,13 +90,13 @@ def disconnect_from_broker():
 def run_receiver():
     connect_to_broker()
     #this
-   #  inp = ""
-   #  while inp != "exit":
-   #      inp = input()
-   # # or
-    create_main_window()
+    inp = ""
+    while inp != "exit":
+        inp = input()
+   # or
+    # create_main_window()
     # Start to display window (It will stay here until window is displayed)
-    window.mainloop()
+    # window.mainloop()
     disconnect_from_broker()
 
 

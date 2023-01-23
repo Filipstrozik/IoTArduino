@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
 # developed by Filip Strózik 2022
 
-import RPi.GPIO as GPIO
+# import RPi.GPIO as GPIO
 import time
 from datetime import datetime, timedelta
-import neopixel
-import board
-import busio
-import w1thermsensor
-import adafruit_bme280.advanced as adafruit_bme280
-from mfrc522 import MFRC522
-from config import *
+# import neopixel
+# import board
+# import busio
+# import w1thermsensor
+# import adafruit_bme280.advanced as adafruit_bme280
+# from mfrc522 import MFRC522
 
 
 def formated_print(mytime):
@@ -20,24 +19,28 @@ def formated_print(mytime):
 class RFID:
     def __init__(self):
         self.MIFAREReader = MFRC522()
-        self.initial_time = datetime.now()
+        self.initial_time = datetime.now() - timedelta(seconds=5)
         self.is_being_read = False
 
-    def read(self) -> bool:
+    def read(self):
         (status, TagType) = self.MIFAREReader.MFRC522_Request(self.MIFAREReader.PICC_REQIDL)
         if status == self.MIFAREReader.MI_OK:
             (status, uid) = self.MIFAREReader.MFRC522_Anticoll()
             if status == self.MIFAREReader.MI_OK:
                 curr_time = datetime.now()
-                if not self.is_being_read:
+                if self.initial_time + timedelta(seconds=5) < curr_time and not self.is_being_read:
                     self.is_being_read = True
                     self.initial_time = curr_time
-                    return True
+                    num = 0
+                    for i in range(0, len(uid)):
+                        num += uid[i] << (i*8)
+                    return num
                 else:  # this is after sth called nesting
                     self.is_being_read = False
+                    return None
         else:
             self.is_being_read = False
-        return False
+        return None
 
     def print_read_rfid(self):
         print(f'card readed: {self.is_being_read} Last read time: {formated_print(self.initial_time)}')
@@ -72,7 +75,7 @@ class MainController:
         self.rfid = RFID()
         self.led = LedController()
         self.buzzer = None
-        self.time_period = 1.0
+        self.time_period = 1
 
     def run(self):
         if self.rfid.read():
@@ -80,15 +83,9 @@ class MainController:
             GPIO.output(buzzerPin, False)
             self.led.animate_read()
 
-        if self.rfid.initial_time + timedelta(seconds=1) < datetime.now():
+        if self.rfid.initial_time + self.time_period < datetime.now():
             GPIO.output(buzzerPin, True)
 
         if not self.rfid.is_being_read:
             self.led.pixels.fill(Color.black)
             self.led.pixels.show()
-
-
-if __name__ == '__main__':
-    controller = MainController()
-    while True:
-        controller.run()
